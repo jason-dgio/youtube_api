@@ -100,7 +100,7 @@ class API {
 
   Object getVideoOption(String videoIds, int length) {
     Object options = {
-      "part": "contentDetails",
+      "part": "contentDetails,statistics",
       "id": videoIds,
       "maxResults": "$length",
       "key": "${this.key}",

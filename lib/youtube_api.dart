@@ -56,13 +56,14 @@ class YoutubeAPI {
   /*
   Get video details from video Id
    */
-  Future<List<YT_VIDEO>> video(List<String> videoId) async {
-    List<YT_VIDEO> result = [];
+  Future<Map<String, YT_VIDEO>> video(List<String> videoId) async {
+    Map<String, YT_VIDEO> result = {};
     Uri url = api.videoUri(videoId);
     var res = await http.get(url, headers: {"Accept": "application/json"});
+    print(res.body);
     var jsonData = json.decode(res.body);
 
-    if (jsonData == null) return [];
+    if (jsonData == null) return {};
 
     int total = jsonData['pageInfo']['totalResults'] <
         jsonData['pageInfo']['resultsPerPage']
@@ -70,7 +71,7 @@ class YoutubeAPI {
         : jsonData['pageInfo']['resultsPerPage'];
 
     for (int i = 0; i < total; i++) {
-      result.add(new YT_VIDEO(jsonData['items'][i]));
+      result[videoId[i]] = new YT_VIDEO(jsonData['items'][i]);
     }
     return result;
   }
@@ -98,12 +99,12 @@ class YoutubeAPI {
       if(ytApiObj.kind == "video")
         videoIdList.add(ytApiObj.id);
       result.add(ytApiObj);
-    }
-    List<YT_VIDEO> videoList = await video(videoIdList);
+    }/* deprecated
+    Map<String, YT_VIDEO> videoMap = await video(videoIdList);
     await Future.forEach(videoList, (YT_VIDEO ytVideo) {
       YT_API ytAPIObj = result.singleWhere((ytAPI) => ytAPI.id == ytVideo.id, orElse: () => null);
       ytAPIObj.duration = _getDuration(ytVideo?.duration ?? "") ?? "";
-    });
+    });*/
     return result;
   }
 
@@ -236,8 +237,8 @@ class YT_API {
       title,
       description,
       channelTitle,
-      url,
-      duration;
+      url;/*deprecated,
+      duration;*/
 
   YT_API(dynamic data) {
     thumbnail = {
@@ -278,9 +279,13 @@ class YT_API {
 class YT_VIDEO {
   String duration;
   String id;
+  int viewCount;
+  int likeCount;
 
   YT_VIDEO(dynamic data) {
     id = data['id'];
-    duration = data['contentDetails']['duration'];
+    duration = _getDuration(data['contentDetails']['duration'] ?? "") ?? "";
+    viewCount = int.parse(data['statistics']['viewCount']);
+    likeCount = int.parse(data['statistics']['likeCount']);
   }
 }
